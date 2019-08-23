@@ -2,193 +2,229 @@
 #include <string>
 #include <set>
 #include <vector>
+#include <map>
 #include <algorithm>
 #include <boost/foreach.hpp>
 
 using namespace std;
 
-// void create_database(string database_name){
-//   return set<set<vector<string>>> database_name;
-// }
-//
-// void create_table(string table_name){
-//   return set<vector<string>> table_name;
-// }
+map<string, set<vector<string>>> database;
 
-void display_element(set<set<vector<string>>> database, set<vector<string>> table){
+void create_table(string table_name, vector<string> column_names){
+  set<vector<string>> table;
+  table.insert(column_names);
+  database.insert(pair<string, set<vector<string>>> (table_name, table));
+}
+
+void display_element(string table_name){
   // select all elements
   // set<set<vector<string>>>::iterator itr = database.find(table);
-  auto itr = database.find(table);
-  if(itr != database.end()){
+  auto itr1 = database.find(table_name);
+  if(itr1 != database.end()){
+    set<vector<string>> table = itr1->second;
     int count = 1;
-    for(auto itr1 = table.begin(); itr1 != table.end(); ++itr1){
+    for(auto itr2 = table.begin(); itr2 != table.end(); ++itr2){
       cout << count << " ";
-      for(auto itr2 = itr1->begin(); itr2 != itr1->end(); ++itr2){
-        cout << *itr2 << "    ";
+      for(auto itr3 = itr2->begin(); itr3 != itr2->end(); ++itr3){
+        cout << *itr3 << "    ";
       }
       count++;
       cout <<"\n-----------------------------\n";
     }
     cout << endl;
-  }else{
-    cout << "table to be display doesn't found!" << endl;
   }
 }
 
-set<vector<string>> insert_element(set<vector<string>> table, vector<string> column){
+void insert_element(string table_name, vector<string> column){
   // insert element into the table
-  table.insert(column);
-  return table;
+  auto itr1 = database.find(table_name);
+  if(itr1 != database.end()){
+    set<vector<string>> table = itr1->second;
+    table.insert(column);
+    database[table_name] = table; // update database with key table_name
+  }
 }
 
-void select_element(set<vector<string>> table, string name){
+void select_element(string table_name, string primery_key){
   // select specific element
-  for(auto itr1 = table.begin(); itr1 != table.end(); ++itr1){
-    for(auto itr2 = itr1->begin(); itr2 != itr1->end(); ++itr2){
-      if( *itr1->begin() == name){
-        cout << *itr2 << endl;
+  auto itr1 = database.find(table_name);
+  if(itr1 != database.end()){
+    set<vector<string>> table = itr1->second;
+    for(auto itr2 = table.begin(); itr2 != table.end(); ++itr2){
+      for(auto itr3 = itr2->begin(); itr3 != itr2->end(); ++itr3){
+        if( *itr2->begin() == primery_key){
+          cout << *itr3 << endl;
+        }
       }
     }
   }
   cout << endl;
 }
 
-set<vector<string>> update_element(set<vector<string>> table, vector<string> column){
+void update_element(string table_name, vector<string> updated_row){
   // update elements of the table
-  for(auto itr1 = table.begin(); itr1 != table.end(); ++itr1){
-    for(auto itr2 = itr1->begin(); itr2 != itr1->end(); ++itr2){
-      if( *itr1->begin() == column[0]){
-        table.erase(itr1);
-        table.insert(column);
-        break;
+  auto itr1 = database.find(table_name);
+  if(itr1 != database.end()){
+    set<vector<string>> table = itr1->second;
+    for(auto itr2 = table.begin(); itr2 != table.end(); ++itr2){
+      for(auto itr3 = itr2->begin(); itr3 != itr2->end(); ++itr3){
+        if( *itr2->begin() == updated_row[0]){
+          table.erase(itr2);
+          table.insert(updated_row);
+          database[table_name] = table; // update database with key table_name
+          break;
+        }
       }
+      cout << endl;
     }
-    cout << endl;
   }
-  return table;
 }
 
-set<vector<string>> delete_element(set<vector<string>> table, string name){
+void delete_element(string table_name, string name){
   // delete elements from the table
-  for(auto itr1 = table.begin(); itr1 != table.end(); ++itr1){
-    for(auto itr2 = itr1->begin(); itr2 != itr1->end(); ++itr2){
-      if( *itr1->begin() == name){
-        table.erase(itr1);
-        break;
+  auto itr1 = database.find(table_name);
+  if(itr1 != database.end()){
+    set<vector<string>> table = itr1->second;
+    for(auto itr2 = table.begin(); itr2 != table.end(); ++itr2){
+      for(auto itr3 = itr2->begin(); itr3 != itr2->end(); ++itr3){
+        if( *itr2->begin() == name){
+          table.erase(itr2);
+          database[table_name] = table; // update database with key table_name
+          break;
+        }
       }
     }
   }
-  return table;
 }
 
-set<vector<string>> inner_join(set<vector<string>> table1, set<vector<string>> table2){
+void inner_join(string table1_name, string table2_name, string inner_join_table_name){
   // find intersection of two tables
   set<vector<string>> inner_join_table;
-  set_intersection(table1.begin(), table1.end(), table2.begin(), table2.end(), inserter(inner_join_table, inner_join_table.begin()));
-  return inner_join_table;
+  auto itr1 = database.find(table1_name);
+  auto itr2 = database.find(table2_name);
+  if(itr1 != database.end() && itr2 != database.end()){
+    set<vector<string>> table1 = itr1->second;
+    set<vector<string>> table2 = itr2->second;
+    set_intersection(table1.begin(), table1.end(), table2.begin(), table2.end(), inserter(inner_join_table, inner_join_table.begin()));
+    database.insert(pair<string, set<vector<string>>> (inner_join_table_name, inner_join_table));
+  }
 }
 
-set<vector<string>> outter_join(set<vector<string>> table1, set<vector<string>> table2){
-  // find union of two tables
+void outter_join(string table1_name, string table2_name, string outter_join_table_name){
+  // find intersection of two tables
   set<vector<string>> outter_join_table;
-  set_union(table1.begin(), table1.end(), table2.begin(), table2.end(), inserter(outter_join_table, outter_join_table.begin()));
-  return outter_join_table;
+  auto itr1 = database.find(table1_name);
+  auto itr2 = database.find(table2_name);
+  if(itr1 != database.end() && itr2 != database.end()){
+    set<vector<string>> table1 = itr1->second;
+    set<vector<string>> table2 = itr2->second;
+    set_union(table1.begin(), table1.end(), table2.begin(), table2.end(), inserter(outter_join_table, outter_join_table.begin()));
+    database.insert(pair<string, set<vector<string>>> (outter_join_table_name, outter_join_table));
+  }
 }
 
-set<vector<string>> left_join(set<vector<string>> table1, set<vector<string>> table2){
-  // find left_join of two tables
+void left_join(string table1_name, string table2_name, string left_join_table_name){
+  // find intersection of two tables
   set<vector<string>> left_join_table;
-  set_difference(table1.begin(), table1.end(), table2.begin(), table2.end(), inserter(left_join_table, left_join_table.begin()));
-  return left_join_table;
+  auto itr1 = database.find(table1_name);
+  auto itr2 = database.find(table2_name);
+  if(itr1 != database.end() && itr2 != database.end()){
+    set<vector<string>> table1 = itr1->second;
+    set<vector<string>> table2 = itr2->second;
+    set_difference(table1.begin(), table1.end(), table2.begin(), table2.end(), inserter(left_join_table, left_join_table.begin()));
+    database.insert(pair<string, set<vector<string>>> (left_join_table_name, left_join_table));
+  }
 }
 
-set<vector<string>> right_join(set<vector<string>> table1, set<vector<string>> table2){
-  // find write join of two tables
+void right_join(string table1_name, string table2_name, string right_join_table_name){
+  // find intersection of two tables
   set<vector<string>> right_join_table;
-  set_difference(table1.begin(), table1.end(), table2.begin(), table2.end(), inserter(right_join_table, right_join_table.begin()));
-  return right_join_table;
+  auto itr1 = database.find(table1_name);
+  auto itr2 = database.find(table2_name);
+  if(itr1 != database.end() && itr2 != database.end()){
+    set<vector<string>> table1 = itr1->second;
+    set<vector<string>> table2 = itr2->second;
+    set_difference(table1.begin(), table1.end(), table2.begin(), table2.end(), inserter(right_join_table, right_join_table.begin()));
+    database.insert(pair<string, set<vector<string>>> (right_join_table_name, right_join_table));
+  }
 }
 
 int main(int argc, char const *argv[]) {
 
-  set<set<vector<string>>> database;
-  set<vector<string>> table1;
-  set<vector<string>> table2;
+  // operations
+  // 1) create table
+  string table1_name = "table1";
+  vector<string> table1_column_names = {"name", "age", "gender"};
+  create_table(table1_name, table1_column_names);
+  string table2_name = "table2";
+  vector<string> table2_column_names = {"name", "age", "gender"};
+  create_table(table2_name, table2_column_names);
 
-  // column to be inserted to both tables
-  vector<string> column = {"name", "age", "gender"};
-
-  // columns to be inserted to table1
+  // 2) insert element
+  // columnts to be inserted to table1
   vector<string> yonathan = {"yonathan", "23", "male"};
   vector<string> daniel = {"daniel", "20", "male"};
   vector<string> ephrame = {"ephrame", "24", "male"};
 
   // columns to be inserted to table2
-  vector<string> eleny = {"yonathan", "5", "female"};
+  vector<string> eleny = {"eleny", "5", "female"};
   vector<string> lidya = {"daniel", "18", "female"};
   vector<string> betty = {"ephrame", "13", "female"};
 
   // insert the elements to table1
-  table1 = insert_element(table1, column);
-  table1 = insert_element(table1, yonathan);
-  table1 = insert_element(table1, daniel);
-  table1 = insert_element(table1, ephrame);
+  insert_element(table1_name, yonathan);
+  insert_element(table1_name, daniel);
+  insert_element(table1_name, ephrame);
 
   // insert the elements to table2
-  table2 = insert_element(table2, column);
-  table2 = insert_element(table2, yonathan);
-  table2 = insert_element(table2, daniel);
-  table2 = insert_element(table2, ephrame);
+  insert_element(table2_name, yonathan);
+  insert_element(table2_name, daniel);
+  insert_element(table2_name, ephrame);
 
-  // insert the tables to the databse
-  database.insert(table1);
-  database.insert(table2);
+  // 3) display element
+  cout << "---------Table1------------\n";
+  display_element(table1_name);
+  cout << "---------Table2------------\n";
+  display_element(table2_name);
 
-  display_element(database, table1);
-  string name = "yonathan";
-  select_element(table1, name);
-  table1 = delete_element(table1, name);
-  database.insert(table1);
-  cout << "after deleting " << endl;
-  display_element(database, table1);
+  // 4) select element
+  string table1_primary_key = "yonathan";
+  select_element(table1_name, table1_primary_key);
 
-  vector<string> daniel_update = {"daniel", "21", "female"};
-  table1 = update_element(table1, daniel_update);
-  database.insert(table1);
-  cout << "after updating " << endl;
-  display_element(database, table1);
+  // 5) delete element
+  delete_element(table1_name, table1_primary_key);
+  cout << "------after deleting-------" << endl;
+  display_element(table1_name);
 
-  // test inner join
-  set<vector<string>> inner_join_table;
-  inner_join_table = inner_join(table1, table2);
-  database.insert(inner_join_table);
-  cout << "Table1" << endl;
-  display_element(database, table1);
-  cout << "Table2" << endl;
-  display_element(database, table2);
-  cout << "Inner joining" << endl;
-  display_element(database, inner_join_table);
+  // 6) update element
+  vector<string> updated_row = {"daniel", "21", "female"};
+  update_element(table1_name, updated_row);
+  cout << "------after updating------" << endl;
+  display_element(table1_name);
 
-  // testing outer join
-  set<vector<string>> outter_join_table;
-  outter_join_table = outter_join(table1, table2);
-  database.insert(outter_join_table);
-  cout << "Outter joining" << endl;
-  display_element(database, outter_join_table);
+  // 7) inner join
+  string inner_join_table_name = "inner_join_table";
+  inner_join(table1_name, table2_name, inner_join_table_name);
+  cout << "------Inner joining--------" << endl;
+  display_element(inner_join_table_name);
 
-  // tesing left join
-  set<vector<string>> left_join_table;
-  left_join_table = left_join(table1, table2);
-  database.insert(left_join_table);
-  cout << "Left joining" << endl;
-  display_element(database, left_join_table);
+  // 8) outter join
+  string outter_join_table_name = "outter_join_table";
+  outter_join(table1_name, table2_name, outter_join_table_name);
+  cout << "------outter joining--------" << endl;
+  display_element(outter_join_table_name);
 
-  // testing right join
-  set<vector<string>> right_join_table;
-  right_join_table = right_join(table1, table2);
-  database.insert(right_join_table);
-  cout << "Right joining" << endl;
-  display_element(database, right_join_table);
+  // 9) left join
+  string left_join_table_name = "left_join_table";
+  left_join(table1_name, table2_name, left_join_table_name);
+  cout << "------left joining--------" << endl;
+  display_element(left_join_table_name);
+
+  // 10) right join
+  string right_join_table_name = "right_join_table";
+  right_join(table1_name, table2_name, right_join_table_name);
+  cout << "------right joining--------" << endl;
+  display_element(right_join_table_name);
 
   return 0;
 }
