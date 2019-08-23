@@ -126,8 +126,9 @@ void delete_element(string table_name, string key, string value){
 }
 
 
-void inner_join(string table1_name, string table2_name, string inner_join_table_name){
+string inner_join(string table1_name, string table2_name){
   // find intersection of two tables
+  string inner_join_table_name = "inner_join_" + table1_name + "_and_" + table2_name;
   set<vector<string>> inner_join_table;
   auto itr1 = database.find(table1_name);
   auto itr2 = database.find(table2_name);
@@ -137,10 +138,12 @@ void inner_join(string table1_name, string table2_name, string inner_join_table_
     set_intersection(table1.begin(), table1.end(), table2.begin(), table2.end(), inserter(inner_join_table, inner_join_table.begin()));
     database.insert(pair<string, set<vector<string>>> (inner_join_table_name, inner_join_table));
   }
+  return inner_join_table_name;
 }
 
-void outter_join(string table1_name, string table2_name, string outter_join_table_name){
+string outter_join(string table1_name, string table2_name){
   // find intersection of two tables
+  string outter_join_table_name = "outter_join_" + table1_name + "_and_" + table2_name;
   set<vector<string>> outter_join_table;
   auto itr1 = database.find(table1_name);
   auto itr2 = database.find(table2_name);
@@ -150,10 +153,12 @@ void outter_join(string table1_name, string table2_name, string outter_join_tabl
     set_union(table1.begin(), table1.end(), table2.begin(), table2.end(), inserter(outter_join_table, outter_join_table.begin()));
     database.insert(pair<string, set<vector<string>>> (outter_join_table_name, outter_join_table));
   }
+  return outter_join_table_name;
 }
 
-void left_join(string table1_name, string table2_name, string left_join_table_name){
+string left_join(string table1_name, string table2_name){
   // find intersection of two tables
+  string left_join_table_name = "left_join_" + table1_name + "_and_" + table2_name;
   set<vector<string>> left_join_table;
   auto itr1 = database.find(table1_name);
   auto itr2 = database.find(table2_name);
@@ -163,10 +168,12 @@ void left_join(string table1_name, string table2_name, string left_join_table_na
     set_difference(table1.begin(), table1.end(), table2.begin(), table2.end(), inserter(left_join_table, left_join_table.begin()));
     database.insert(pair<string, set<vector<string>>> (left_join_table_name, left_join_table));
   }
+  return left_join_table_name;
 }
 
-void right_join(string table1_name, string table2_name, string right_join_table_name){
+string right_join(string table1_name, string table2_name){
   // find intersection of two tables
+  string right_join_table_name = "right_join_" + table1_name + "_and_" + table2_name;
   set<vector<string>> right_join_table;
   auto itr1 = database.find(table1_name);
   auto itr2 = database.find(table2_name);
@@ -176,6 +183,7 @@ void right_join(string table1_name, string table2_name, string right_join_table_
     set_difference(table1.begin(), table1.end(), table2.begin(), table2.end(), inserter(right_join_table, right_join_table.begin()));
     database.insert(pair<string, set<vector<string>>> (right_join_table_name, right_join_table));
   }
+  return right_join_table_name;
 }
 
 vector<string> parse_string(string str, string separator){
@@ -224,12 +232,56 @@ void query(string query){
     display_element(table_name);
   // 3 - selection queries
 }else if (query_segment[0] == "select"){
-    string column_name = query_segment[1];
-    string table_name = query_segment[3];
-    cout << "---------selected element from " + table_name + "-------" << endl;
-    string sub_separator = "equal";
-    vector<string> where_condition = parse_string(query_segment[5], sub_separator);
-    select_element(table_name, column_name, where_condition[0], where_condition[1]);
+    string join_connector = query_segment[4];
+    // select from inner joined table
+    if (join_connector == "inner_join"){
+      string column_name = query_segment[1];
+      string table1_name = query_segment[3];
+      string table2_name = query_segment[5];
+      string table_name = inner_join(table1_name, table2_name);
+      cout << "---------selected element from " + table_name + "-------" << endl;
+      string sub_separator = "equal";
+      vector<string> where_condition = parse_string(query_segment[7], sub_separator);
+      select_element(table_name, column_name, where_condition[0], where_condition[1]);
+    // select from outter joined table
+    } else if (join_connector == "outter_join"){
+      string column_name = query_segment[1];
+      string table1_name = query_segment[3];
+      string table2_name = query_segment[5];
+      string table_name = outter_join(table1_name, table2_name);
+      cout << "---------selected element from " + table_name + "-------" << endl;
+      string sub_separator = "equal";
+      vector<string> where_condition = parse_string(query_segment[7], sub_separator);
+      select_element(table_name, column_name, where_condition[0], where_condition[1]);
+    // select from left joined table
+    } else if (join_connector == "left_join"){
+      string column_name = query_segment[1];
+      string table1_name = query_segment[3];
+      string table2_name = query_segment[5];
+      string table_name = left_join(table1_name, table2_name);
+      cout << "---------selected element from " + table_name + "-------" << endl;
+      string sub_separator = "equal";
+      vector<string> where_condition = parse_string(query_segment[7], sub_separator);
+      select_element(table_name, column_name, where_condition[0], where_condition[1]);
+    // select from right joined table
+    } else if(join_connector == "right_join"){
+      string column_name = query_segment[1];
+      string table1_name = query_segment[3];
+      string table2_name = query_segment[5];
+      string table_name = right_join(table1_name, table2_name);
+      cout << "---------selected element from " + table_name + "-------" << endl;
+      string sub_separator = "equal";
+      vector<string> where_condition = parse_string(query_segment[7], sub_separator);
+      select_element(table_name, column_name, where_condition[0], where_condition[1]);
+    // select from a single table
+    }else{
+      string column_name = query_segment[1];
+      string table_name = query_segment[3];
+      cout << "---------selected element from " + table_name + "-------" << endl;
+      string sub_separator = "equal";
+      vector<string> where_condition = parse_string(query_segment[5], sub_separator);
+      select_element(table_name, column_name, where_condition[0], where_condition[1]);
+    }
   // 4 - updating queries
 }else if (query_segment[0] == "update") {
     string table_name = query_segment[1];
@@ -270,7 +322,7 @@ void display_query_syntax(){
   cout << "\t3) select * from table_name where firstname=firstname\n";
   cout << "\t4) update table_name values=name,age,gender where firstname=firstname\n";
   cout << "\t5) delete from table_name where firstname=firstname\n";
-  cout << "\t6) select * from table1_name inner_join table2_name on table1_name.firstname=table2_name.firstname\n";
+  cout << "\t6) select * from table1_name inner_join table2_name where firstname=firstname\n";
   cout << "\t7) show table table_name\n";
   cout << "\t8) drop table table_name\n";
   cout << "\t\t Enter quite or q to quite. ";
