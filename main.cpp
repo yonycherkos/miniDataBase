@@ -4,9 +4,10 @@
 #include <vector>
 #include <map>
 #include <algorithm>
-#include <boost/foreach.hpp>
+#include <boost/tokenizer.hpp>
 
 using namespace std;
+using namespace boost;
 
 map<string, set<vector<string>>> database;
 
@@ -16,9 +17,16 @@ void create_table(string table_name, vector<string> column_names){
   database.insert(pair<string, set<vector<string>>> (table_name, table));
 }
 
+void drop_table(string table_name){
+  auto itr = database.find(table_name);
+  if(itr != database.end()){
+    database.erase(table_name);
+    cout << table_name << " has been deleted successfuly. \n";
+  }
+}
+
 void display_element(string table_name){
   // select all elements
-  // set<set<vector<string>>>::iterator itr = database.find(table);
   auto itr1 = database.find(table_name);
   if(itr1 != database.end()){
     set<vector<string>> table = itr1->second;
@@ -26,7 +34,7 @@ void display_element(string table_name){
     for(auto itr2 = table.begin(); itr2 != table.end(); ++itr2){
       cout << count << " ";
       for(auto itr3 = itr2->begin(); itr3 != itr2->end(); ++itr3){
-        cout << *itr3 << "    ";
+        cout << *itr3 << "\t";
       }
       count++;
       cout <<"\n-----------------------------\n";
@@ -44,58 +52,79 @@ void insert_element(string table_name, vector<string> column){
     database[table_name] = table; // update database with key table_name
   }
 }
+int find_column_name_index( set<vector<string>> table, string column_name){
+  for(auto itr1 = table.begin(); itr1 != table.end(); itr1++){
+    int index = 0;
+    for(auto itr2 = itr1->begin(); itr2 != itr1->end(); itr2++){
+      string column = *itr2;
+      if(column == column_name){
+         return index;
+      }
+      index++;
+    }
+  }
+}
 
-void select_element(string table_name, string primery_key){
+void select_element(string table_name, string column_name, string key, string value){
   // select specific element
   auto itr1 = database.find(table_name);
   if(itr1 != database.end()){
     set<vector<string>> table = itr1->second;
+    int index = find_column_name_index(table, key);
     for(auto itr2 = table.begin(); itr2 != table.end(); ++itr2){
-      for(auto itr3 = itr2->begin(); itr3 != itr2->end(); ++itr3){
-        if( *itr2->begin() == primery_key){
-          cout << *itr3 << endl;
+      vector<string> row = *itr2;
+      if(row[index] == value){ // if the column name matchs
+        vector<string> desired_row = *itr2;
+        if (column_name == "*"){
+          for(auto itr3 = desired_row.begin(); itr3 != desired_row.end(); ++itr3){
+            cout << *itr3 << "\t";
+          }
+          cout << endl;
+        }else{
+          int index = find_column_name_index(table, column_name);
+          cout << desired_row[index] << endl;
         }
       }
     }
   }
-  cout << endl;
 }
 
-void update_element(string table_name, vector<string> updated_row){
+void update_element(string table_name, vector<string> updated_row, string key, string value){
   // update elements of the table
   auto itr1 = database.find(table_name);
   if(itr1 != database.end()){
     set<vector<string>> table = itr1->second;
+    int index = find_column_name_index(table, key);
     for(auto itr2 = table.begin(); itr2 != table.end(); ++itr2){
-      for(auto itr3 = itr2->begin(); itr3 != itr2->end(); ++itr3){
-        if( *itr2->begin() == updated_row[0]){
-          table.erase(itr2);
-          table.insert(updated_row);
-          database[table_name] = table; // update database with key table_name
-          break;
-        }
+      vector<string> row = *itr2;
+      if(row[index] == value){
+        table.erase(itr2);
+        table.insert(updated_row);
+        database[table_name] = table; // update database with key table_name
+        break;
       }
       cout << endl;
     }
   }
 }
 
-void delete_element(string table_name, string name){
+void delete_element(string table_name, string key, string value){
   // delete elements from the table
   auto itr1 = database.find(table_name);
   if(itr1 != database.end()){
     set<vector<string>> table = itr1->second;
+    int index = find_column_name_index(table, key);
     for(auto itr2 = table.begin(); itr2 != table.end(); ++itr2){
-      for(auto itr3 = itr2->begin(); itr3 != itr2->end(); ++itr3){
-        if( *itr2->begin() == name){
-          table.erase(itr2);
-          database[table_name] = table; // update database with key table_name
-          break;
-        }
+      vector<string> row = *itr2;
+      if(row[index] == value){
+        table.erase(itr2);
+        database[table_name] = table; // update database with key table_name
+        break;
       }
     }
   }
 }
+
 
 void inner_join(string table1_name, string table2_name, string inner_join_table_name){
   // find intersection of two tables
@@ -149,82 +178,120 @@ void right_join(string table1_name, string table2_name, string right_join_table_
   }
 }
 
+vector<string> parse_string(string str, string separator){
+  typedef tokenizer<char_separator<char>> tokenizer;
+  vector<string> string_segment;
+  if (separator == "comma"){
+    char_separator<char> sep{","};
+    tokenizer tok{str, sep};
+    for (auto itr = tok.begin(); itr != tok.end(); ++itr){
+      string_segment.push_back(*itr);
+    }
+  }else if(separator == "equal"){
+    char_separator<char> sep{"="};
+    tokenizer tok{str, sep};
+    for (auto itr = tok.begin(); itr != tok.end(); ++itr){
+      string_segment.push_back(*itr);
+    }
+  }else{
+    char_separator<char> sep{" "};
+    tokenizer tok{str, sep};
+    for (auto itr = tok.begin(); itr != tok.end(); ++itr){
+      string_segment.push_back(*itr);
+    }
+  }
+  return string_segment;
+}
+
+void query(string query){
+  string separator = "space";
+  vector<string> query_segment = parse_string(query, separator);
+  // 1 - creation queries
+  if (query_segment[0] == "create") {
+      string table_name = query_segment[2];
+      cout << "---------created " + table_name + "-------" << endl;
+      string sub_separator = "comma";
+      vector<string> sub_query_segment = parse_string(query_segment[3], sub_separator);
+      create_table(table_name, sub_query_segment);
+      display_element(table_name);
+  // 2 - insertion queries
+}else if (query_segment[0] == "insert") {
+    string table_name = query_segment[2];
+    cout << "---------inserted element into " + table_name + "-------" << endl;
+    string sub_separator = "comma";
+    vector<string> column = parse_string(query_segment[3], sub_separator);
+    insert_element(table_name, column);
+    display_element(table_name);
+  // 3 - selection queries
+}else if (query_segment[0] == "select"){
+    string column_name = query_segment[1];
+    string table_name = query_segment[3];
+    cout << "---------selected element from " + table_name + "-------" << endl;
+    string sub_separator = "equal";
+    vector<string> where_condition = parse_string(query_segment[5], sub_separator);
+    select_element(table_name, column_name, where_condition[0], where_condition[1]);
+  // 4 - updating queries
+}else if (query_segment[0] == "update") {
+    string table_name = query_segment[1];
+    cout << "---------updated " + table_name + "-------" << endl;
+    string sub_separator = "equal";
+    vector<string> sub_query_segment = parse_string(query_segment[2], sub_separator);
+    string sub_sub_separator = "comma";
+    vector<string> column = parse_string(sub_query_segment[1], sub_sub_separator);
+    vector<string> where_condition = parse_string(query_segment[4], sub_separator);
+    update_element(table_name, column, where_condition[0], where_condition[1]);
+    display_element(table_name);
+  // 5 - deletion queries
+}else if (query_segment[0] == "delete"){
+    string table_name = query_segment[2];
+    cout << "---------" + table_name + " after element deletion-------" << endl;
+    string sub_separator = "equal";
+    vector<string> where_condition = parse_string(query_segment[4], sub_separator);
+    delete_element(table_name, where_condition[0], where_condition[1]);
+    display_element(table_name);
+  // 6 - drop queries
+}else if (query_segment[0] == "drop"){
+    string table_name = query_segment[2];
+    drop_table(table_name);
+  // 7 - invalid query
+}else if (query_segment[0] == "show"){
+    string table_name = query_segment[2];
+    display_element(table_name);
+}else {
+    cout << "please, Enter valued query. " << endl;
+  }
+}
+
+void display_query_syntax(){
+  cout << "=====================================================================================================\n";
+  cout << "\t\t sample query syntax example\n";
+  cout << "\t1) create table table_name firstname,lastname,age\n";
+  cout << "\t2) insert into table_name name,age,gender\n";
+  cout << "\t3) select * from table_name where firstname=firstname\n";
+  cout << "\t4) update table_name values=name,age,gender where firstname=firstname\n";
+  cout << "\t5) delete from table_name where firstname=firstname\n";
+  cout << "\t6) select * from table1_name inner_join table2_name on table1_name.firstname=table2_name.firstname\n";
+  cout << "\t7) show table table_name\n";
+  cout << "\t8) drop table table_name\n";
+  cout << "\t\t Enter quite or q to quite. ";
+  cout << "=====================================================================================================\n\n";
+}
+
 int main(int argc, char const *argv[]) {
 
   // operations
-  // 1) create table
-  string table1_name = "table1";
-  vector<string> table1_column_names = {"name", "age", "gender"};
-  create_table(table1_name, table1_column_names);
-  string table2_name = "table2";
-  vector<string> table2_column_names = {"name", "age", "gender"};
-  create_table(table2_name, table2_column_names);
-
-  // 2) insert element
-  // columnts to be inserted to table1
-  vector<string> yonathan = {"yonathan", "23", "male"};
-  vector<string> daniel = {"daniel", "20", "male"};
-  vector<string> ephrame = {"ephrame", "24", "male"};
-
-  // columns to be inserted to table2
-  vector<string> eleny = {"eleny", "5", "female"};
-  vector<string> lidya = {"daniel", "18", "female"};
-  vector<string> betty = {"ephrame", "13", "female"};
-
-  // insert the elements to table1
-  insert_element(table1_name, yonathan);
-  insert_element(table1_name, daniel);
-  insert_element(table1_name, ephrame);
-
-  // insert the elements to table2
-  insert_element(table2_name, yonathan);
-  insert_element(table2_name, daniel);
-  insert_element(table2_name, ephrame);
-
-  // 3) display element
-  cout << "---------Table1------------\n";
-  display_element(table1_name);
-  cout << "---------Table2------------\n";
-  display_element(table2_name);
-
-  // 4) select element
-  string table1_primary_key = "yonathan";
-  select_element(table1_name, table1_primary_key);
-
-  // 5) delete element
-  delete_element(table1_name, table1_primary_key);
-  cout << "------after deleting-------" << endl;
-  display_element(table1_name);
-
-  // 6) update element
-  vector<string> updated_row = {"daniel", "21", "female"};
-  update_element(table1_name, updated_row);
-  cout << "------after updating------" << endl;
-  display_element(table1_name);
-
-  // 7) inner join
-  string inner_join_table_name = "inner_join_table";
-  inner_join(table1_name, table2_name, inner_join_table_name);
-  cout << "------Inner joining--------" << endl;
-  display_element(inner_join_table_name);
-
-  // 8) outter join
-  string outter_join_table_name = "outter_join_table";
-  outter_join(table1_name, table2_name, outter_join_table_name);
-  cout << "------outter joining--------" << endl;
-  display_element(outter_join_table_name);
-
-  // 9) left join
-  string left_join_table_name = "left_join_table";
-  left_join(table1_name, table2_name, left_join_table_name);
-  cout << "------left joining--------" << endl;
-  display_element(left_join_table_name);
-
-  // 10) right join
-  string right_join_table_name = "right_join_table";
-  right_join(table1_name, table2_name, right_join_table_name);
-  cout << "------right joining--------" << endl;
-  display_element(right_join_table_name);
+  display_query_syntax();
+  bool terminate = false;
+  while(!terminate){
+    string input_query;
+    cout << "Enter query: ";
+    getline(cin, input_query);
+    if (input_query == "quite" || input_query == "q"){
+      terminate = true;
+    }else{
+      query(input_query);
+    }
+  }
 
   return 0;
 }
