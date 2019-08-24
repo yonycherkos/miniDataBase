@@ -166,7 +166,7 @@ string right_join(string table1_name, string table2_name){
   if(itr1 != database.end() && itr2 != database.end()){
     set<vector<string>> table1 = itr1->second;
     set<vector<string>> table2 = itr2->second;
-    set_difference(table1.begin(), table1.end(), table2.begin(), table2.end(), inserter(right_join_table, right_join_table.begin()));
+    set_difference(table2.begin(), table2.end(), table1.begin(), table1.end(), inserter(right_join_table, right_join_table.begin()));
     database.insert(pair<string, set<vector<string>>> (right_join_table_name, right_join_table));
   }
   return right_join_table_name;

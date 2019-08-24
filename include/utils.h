@@ -10,14 +10,14 @@ using namespace boost;
 void display_query_syntax(){
   cout << "=====================================================================================================\n";
   cout << "\t\t sample query syntax example\n";
-  cout << "\t1) create table table_name firstname,lastname,age\n";
-  cout << "\t2) insert into table_name name,age,gender\n";
-  cout << "\t3) select * from table_name where firstname=firstname\n";
-  cout << "\t4) update table_name values=name,age,gender where firstname=firstname\n";
-  cout << "\t5) delete from table_name where firstname=firstname\n";
-  cout << "\t6) select * from table1_name inner_join table2_name where firstname=firstname\n";
-  cout << "\t7) show table table_name\n";
-  cout << "\t8) drop table table_name\n";
+  cout << "\t1) create table student id,name,age,gender\n";
+  cout << "\t2) insert into student 1,danny,21,male\n";
+  cout << "\t3) select * from student where name=danny\n";
+  cout << "\t4) update student values=1,danny,25,male where name=danny\n";
+  cout << "\t5) delete from student where id=1\n";
+  cout << "\t6) select * from student inner_join teacher where name=danny\n";
+  cout << "\t7) show table student\n";
+  cout << "\t8) drop table student\n";
   cout << "\t\t Enter quite or q to quite.\n";
   cout << "=====================================================================================================\n\n";
 }
