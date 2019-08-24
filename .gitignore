@@ -32,8 +32,10 @@
 *.app
 
 # Test
-test.cpp
-test
+src/test*
 
 # idea
 /.idea
+
+# ignoring build files
+build/

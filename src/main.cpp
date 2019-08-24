@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include "include/query.h"
+#include "../include/query.h"
 
 using namespace std;
 

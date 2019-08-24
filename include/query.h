@@ -105,8 +105,10 @@ void query(string query){
   string separator = "space";
   vector<string> query_segment = parse_query(query, separator);
   int query_lenght = query_segment.size();
+  if ( query_lenght == 0){
+      cout << "No query entered, Enter valued query" << endl;
   // 1 - creation queries
-  if (query_segment[0] == "create") {
+  }else if (query_segment[0] == "create") {
       if (query_lenght < 4){
         cout << "\t\t invalid create table query, Enter valued query \n";
       }else{
@@ -123,7 +125,7 @@ void query(string query){
   }else if (query_segment[0] == "select"){
       if (query_lenght < 6){
         cout << "\t\t invalid select elements from table query, Enter valued query \n";
-      }else{
+      } else {
         select_query(query_segment);
       }
     // 4 - updating queries
